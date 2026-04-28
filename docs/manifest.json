@@ -11,10 +11,10 @@
         "gemma-tjs": "onnx-community/gemma-4-E2B-it-ONNX",
         "edge-prompt": "Phi-4-mini (Edge AI 2025.10.23.1)"
       },
-      "report": "../results/20260428-macos/report.md",
+      "report": "https://github.com/halton/on-device-llm-bench/blob/main/results/20260428-macos/report.md",
       "json": {
-        "gemma-tjs": "../results/20260428-macos/gemma-tjs-2026-04-28T09-59-24-564Z.json",
-        "edge-prompt": "../results/20260428-macos/edge-prompt-2026-04-28T10-01-37-929Z.json"
+        "gemma-tjs": "https://github.com/halton/on-device-llm-bench/blob/main/results/20260428-macos/gemma-tjs-2026-04-28T09-59-24-564Z.json",
+        "edge-prompt": "https://github.com/halton/on-device-llm-bench/blob/main/results/20260428-macos/edge-prompt-2026-04-28T10-01-37-929Z.json"
       },
       "summary": {
         "gemma-tjs": { "passRate": 0.885, "ttftMs": 621, "tps": 16.7 },
@@ -32,10 +32,10 @@
         "gemma-tjs": "onnx-community/gemma-4-E2B-it-ONNX",
         "edge-prompt": "Phi-4-mini (Edge AI 2025.10.23.1)"
       },
-      "report": "../results/20260428-macos-run2/report.md",
+      "report": "https://github.com/halton/on-device-llm-bench/blob/main/results/20260428-macos-run2/report.md",
       "json": {
-        "gemma-tjs": "../results/20260428-macos-run2/gemma-tjs-2026-04-28T10-40-54-012Z.json",
-        "edge-prompt": "../results/20260428-macos-run2/edge-prompt-2026-04-28T10-43-18-222Z.json"
+        "gemma-tjs": "https://github.com/halton/on-device-llm-bench/blob/main/results/20260428-macos-run2/gemma-tjs-2026-04-28T10-40-54-012Z.json",
+        "edge-prompt": "https://github.com/halton/on-device-llm-bench/blob/main/results/20260428-macos-run2/edge-prompt-2026-04-28T10-43-18-222Z.json"
       },
       "summary": {
         "gemma-tjs": { "passRate": 0.885, "ttftMs": 612, "tps": 16.6 },
