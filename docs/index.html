@@ -99,9 +99,15 @@ fetch('manifest.json').then(r => r.json()).then(({ runs }) => {
           <th colspan="3">TPS</th>
         </tr>
         <tr>
-          <th>A Gemma</th><th>B Edge/Phi-4</th><th>C Phi-4 tjs</th>
-          <th>A Gemma</th><th>B Edge/Phi-4</th><th>C Phi-4 tjs</th>
-          <th>A Gemma</th><th>B Edge/Phi-4</th><th>C Phi-4 tjs</th>
+          <th>A<br><small>gemma-tjs</small></th>
+          <th>B<br><small>edge-prompt</small></th>
+          <th>C<br><small>phi4-tjs</small></th>
+          <th>A<br><small>gemma-tjs</small></th>
+          <th>B<br><small>edge-prompt</small></th>
+          <th>C<br><small>phi4-tjs</small></th>
+          <th>A<br><small>gemma-tjs</small></th>
+          <th>B<br><small>edge-prompt</small></th>
+          <th>C<br><small>phi4-tjs</small></th>
         </tr>
       </thead>
       <tbody>${runs.map(row).join('')}</tbody>
