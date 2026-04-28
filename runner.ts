@@ -1,6 +1,7 @@
 import type { Backend, CaseResult, TestCase } from './backends/types';
 import { GemmaTjsBackend } from './backends/gemma-tjs';
 import { EdgePromptBackend } from './backends/edge-prompt';
+import { Phi4TjsBackend } from './backends/phi4-tjs';
 import { TOOL_JSON_SCHEMA } from './backends/tool-prompt';
 
 import toolCalling from './cases/tool-calling.json';
@@ -28,7 +29,7 @@ let backend: Backend | null = null;
 let abortCtl: AbortController | null = null;
 let lastResults: { backendId: string; runs: CaseResult[]; aggregate: any[]; startedAt: string } | null = null;
 
-function getBackendChoice(): 'gemma-tjs' | 'edge-prompt' {
+function getBackendChoice(): 'gemma-tjs' | 'edge-prompt' | 'phi4-tjs' {
   const v = (document.querySelector('input[name=backend]:checked') as HTMLInputElement).value;
   return v as any;
 }
@@ -43,7 +44,11 @@ $('loadBtn').addEventListener('click', async () => {
   log(`[load] backend=${choice}`);
   try {
     if (backend) await backend.dispose();
-    backend = choice === 'gemma-tjs' ? new GemmaTjsBackend() : new EdgePromptBackend();
+    backend = choice === 'gemma-tjs'
+      ? new GemmaTjsBackend()
+      : choice === 'phi4-tjs'
+        ? new Phi4TjsBackend()
+        : new EdgePromptBackend();
     const ms = await backend.init((p) => {
       $('status').textContent = `loading ${choice}: ${p.toFixed(1)}%`;
     });

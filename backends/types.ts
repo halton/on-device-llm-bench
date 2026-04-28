@@ -21,7 +21,7 @@ export interface GenerateResult {
 }
 
 export interface Backend {
-  id: 'gemma-tjs' | 'edge-prompt';
+  id: 'gemma-tjs' | 'edge-prompt' | 'phi4-tjs';
   /** One-time setup: download/load model, warm up. Returns ms taken. */
   init(onProgress?: (pct: number) => void): Promise<number>;
   /** Single-turn generation. */
