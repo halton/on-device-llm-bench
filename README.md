@@ -1,10 +1,15 @@
 # on-device-llm-bench
 
 An open, reproducible benchmark for **on-device LLMs running in the browser**.
-Currently compares two backends behind the same agent interface:
+Currently compares three backends behind the same agent interface:
 
-- **Gemma 4 E2B** via Transformers.js + WebGPU (open-source runtime)
-- **Phi-4-mini** via Microsoft Edge's built-in `LanguageModel` Prompt API (closed runtime)
+- **A — `gemma-tjs`** — Gemma 4 E2B via Transformers.js + WebGPU (portable runtime, smaller model)
+- **B — `edge-prompt`** — Phi-4-mini via Microsoft Edge's built-in `LanguageModel` Prompt API (native runtime)
+- **C — `phi4-tjs`** — Phi-4-mini via Transformers.js + WebGPU (portable runtime, same weights as B)
+
+> **B vs C isolates the runtime** (same Phi-4 weights, different execution stack).
+> **A vs C isolates the model** (same runtime, different weights).
+> **A vs B** is the headline comparison most users will care about.
 
 📊 **Live results dashboard:** https://halton.github.io/on-device-llm-bench/
 
@@ -13,7 +18,7 @@ Currently compares two backends behind the same agent interface:
 On-device LLMs are arriving through two very different stacks: **portable
 (Transformers.js + WebGPU)** and **browser-native (Prompt API)**. They have
 different tradeoffs for accuracy, latency, memory, and developer ergonomics.
-This repo runs the *same* prompts against both and publishes the numbers.
+This repo runs the *same* prompts against all three configurations and publishes the numbers.
 
 Results are device-dependent. We welcome contributed runs from other hardware
 (see [Contributing results](#contributing-results)).
@@ -37,8 +42,9 @@ Results are device-dependent. We welcome contributed runs from other hardware
 
 | Backend | Model | Runtime |
 |---|---|---|
-| `gemma-tjs` | `onnx-community/gemma-4-E2B-it-ONNX` | Transformers.js + WebGPU |
-| `edge-prompt` | Phi-4-mini-instruct | Edge built-in `LanguageModel` (Prompt API) |
+| `gemma-tjs` (A) | `onnx-community/gemma-4-E2B-it-ONNX` | Transformers.js + WebGPU |
+| `edge-prompt` (B) | Phi-4-mini-instruct (Edge AI service) | Edge built-in `LanguageModel` (Prompt API) |
+| `phi4-tjs` (C) | `onnx-community/Phi-4-mini-instruct-ONNX-web` | Transformers.js + WebGPU |
 
 Both are wrapped by the same `Backend` interface (`backends/types.ts`) so the
 runner does not know which one it's calling.
@@ -86,7 +92,7 @@ npm run serve   # vite dev server on http://127.0.0.1:5180/runner.html
 5. Click **Run eval** → watch the live log and aggregate table.
 6. Click **Download results JSON** when complete; save into `results/`.
 
-### 3. Run against Edge + Phi-4
+### 3. Run against Edge + Phi-4 (B — `edge-prompt`)
 
 1. Use Edge Stable (≥ 138).
 2. Enable `edge://flags/#prompt-api-for-phi-mini` → **Enabled**, restart.
@@ -96,15 +102,38 @@ npm run serve   # vite dev server on http://127.0.0.1:5180/runner.html
 5. Open the served runner URL in the same Edge profile, select backend =
    **Phi-4-mini / Edge Prompt API**, repeat steps 3–6 above.
 
-### 4. Compare results
+### 4. Run against Phi-4 via Transformers.js (C — `phi4-tjs`)
+
+1. Same browser/WebGPU prerequisites as Gemma.
+2. Open the served runner URL, select backend =
+   **Phi-4-mini / Transformers.js / WebGPU**.
+3. First run downloads the ONNX shards (~2.4 GB) into the browser CacheStorage.
+4. Repeat steps 3–6 from the Gemma section.
+
+This backend uses the *same Phi-4 weights as B* but executes them under
+`onnxruntime-web` instead of Edge's native ML runtime — useful for isolating
+runtime effects from model effects.
+
+### 5. Compare results
 
 Each download is `{backend}-{timestamp}.json` containing per-run metrics plus
-per-case aggregates (pass-rate over N, mean / p50 / p95 of TTFT and TPS). To
-generate a side-by-side Markdown report:
+per-case aggregates (pass-rate over N, mean / p50 / p95 of TTFT and TPS). The
+`score` script compares two backends at a time:
 
 ```bash
-npm run score -- results/gemma-tjs-*.json results/edge-prompt-*.json --out results/report.md
+# A vs B (the headline comparison)
+npm run score -- results/gemma-tjs-*.json results/edge-prompt-*.json --out results/report-AB.md
+
+# B vs C (isolate runtime)
+npm run score -- results/edge-prompt-*.json results/phi4-tjs-*.json --out results/report-BC.md
+
+# A vs C (isolate model)
+npm run score -- results/gemma-tjs-*.json results/phi4-tjs-*.json --out results/report-AC.md
 ```
+
+The committed `results/<run>/report.md` files merge all three backends into a
+single comparative report — see `results/20260428-macos/report.md` for the
+expected format.
 
 The report includes overall accuracy, accuracy by category, latency &
 throughput with winners marked, and a per-case detail table.
@@ -142,13 +171,16 @@ Append to the relevant `cases/*.json`. Schema:
 The dashboard at the top of this README is fed by `results/<YYYYMMDD>-<os>/`
 folders in this repo. To add a run from your machine:
 
-1. Run both backends per **How to run** above; download the two JSON files.
-2. Score them: `npm run score -- results/gemma-tjs-*.json results/edge-prompt-*.json --out report.md`
+1. Run all three backends per **How to run** above; download the three JSON files.
+2. Score the pairs you care about (see step 5 above), or follow the existing
+   `results/20260428-macos/report.md` layout to merge A/B/C into one report.
 3. Create `results/<YYYYMMDD>-<os-arch>/` (e.g. `20260501-windows-x64`,
-   `20260501-linux-x64`) and move the two JSONs + `report.md` into it.
+   `20260501-linux-x64`) and move the JSONs + `report.md` into it.
 4. Top of `report.md` must include: host, OS, Edge version, extension version,
    model versions (see existing reports for format).
-5. Update `docs/manifest.json` with an entry for your folder.
+5. Update `docs/manifest.json` with an entry for your folder, including
+   `gemma-tjs`, `edge-prompt`, and `phi4-tjs` keys under `models`, `json`, and
+   `summary`.
 6. Open a PR.
 
 ## Automated runner (Playwright) — ⚠️ not working, follow-up needed

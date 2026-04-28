@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   :root { color-scheme: light dark; }
-  body { font: 14px/1.5 -apple-system, system-ui, sans-serif; max-width: 980px; margin: 2rem auto; padding: 0 1rem; }
+  body { font: 14px/1.5 -apple-system, system-ui, sans-serif; max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
   h1 { margin-bottom: 0.2rem; }
   .sub { color: #888; margin-bottom: 2rem; }
   table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
@@ -22,7 +22,11 @@
 </head>
 <body>
 <h1>on-device-llm-bench</h1>
-<p class="sub">Gemma 4 (Transformers.js + WebGPU) vs Phi-4-mini (Edge Prompt API) — same prompts, same harness, different runtimes.
+<p class="sub">Three backends, same prompts, same harness:
+<b>A</b> Gemma 4 (Transformers.js + WebGPU) ·
+<b>B</b> Phi-4-mini (Edge Prompt API, native) ·
+<b>C</b> Phi-4-mini (Transformers.js + WebGPU).
+B vs C isolates the runtime; A vs C isolates the model.
 <a href="https://github.com/halton/on-device-llm-bench">Source on GitHub</a>.</p>
 
 <h2>Results</h2>
@@ -31,42 +35,53 @@
 <details>
 <summary>How to read this</summary>
 <ul>
+  <li><b>A / B / C</b> — A: <code>gemma-tjs</code>, B: <code>edge-prompt</code>, C: <code>phi4-tjs</code>.</li>
   <li><b>Pass-rate</b> — % of cases where the model produced an acceptable answer (exact tool match, grounded answer, correct refusal, etc.).</li>
   <li><b>TTFT</b> — time to first token, in milliseconds. Lower is more responsive.</li>
-  <li><b>TPS</b> — output tokens per second, steady-state. Higher means faster generation.</li>
-  <li><b>Winner</b> column is per-row only — overall tradeoff is in the linked report.</li>
+  <li><b>TPS</b> — output tokens per second, steady-state. Higher means faster generation. C uses exact tokenization; B approximates ~4 chars/token.</li>
+  <li><b>Winner</b> highlight is per-row only — overall tradeoff is in the linked report.</li>
 </ul>
 </details>
 
 <details>
 <summary>Contribute a run from your device</summary>
-<p>Run both backends per the <a href="https://github.com/halton/on-device-llm-bench#how-to-run">README</a>, then add a folder under <code>results/&lt;YYYYMMDD&gt;-&lt;os-arch&gt;/</code> with the two JSONs and a <code>report.md</code>. Append an entry to <code>docs/manifest.json</code> and open a PR.</p>
+<p>Run all three backends per the <a href="https://github.com/halton/on-device-llm-bench#how-to-run">README</a>, then add a folder under <code>results/&lt;YYYYMMDD&gt;-&lt;os-arch&gt;/</code> with the three JSONs and a <code>report.md</code>. Append an entry to <code>docs/manifest.json</code> and open a PR.</p>
 </details>
 
 <script>
-const fmtPct = v => (v * 100).toFixed(1) + '%';
+const fmtPct = v => Number.isFinite(v) ? (v * 100).toFixed(1) + '%' : '—';
 const fmt = v => Number.isFinite(v) ? v.toLocaleString() : '—';
+const fmt1 = v => Number.isFinite(v) ? v.toFixed(1) : '—';
+
+function bestClass(values, lower) {
+  // values: array of numbers (some may be undefined). Returns array of class names.
+  const valid = values.map(v => Number.isFinite(v) ? v : null);
+  const finite = valid.filter(v => v !== null);
+  if (finite.length < 2) return values.map(() => '');
+  const best = lower ? Math.min(...finite) : Math.max(...finite);
+  return valid.map(v => v === best ? 'winner' : '');
+}
 
 function row(r) {
-  const a = r.summary['gemma-tjs'], b = r.summary['edge-prompt'];
-  const w = (x, y, lower) => {
-    if (x === y) return ['', ''];
-    const aWins = lower ? x < y : x > y;
-    return [aWins ? 'winner' : '', aWins ? '' : 'winner'];
-  };
-  const [pa, pb] = w(a.passRate, b.passRate, false);
-  const [ta, tb] = w(a.ttftMs, b.ttftMs, true);
-  const [sa, sb] = w(a.tps, b.tps, false);
+  const a = r.summary['gemma-tjs'] || {};
+  const b = r.summary['edge-prompt'] || {};
+  const c = r.summary['phi4-tjs'] || {};
+  const pass = bestClass([a.passRate, b.passRate, c.passRate], false);
+  const ttft = bestClass([a.ttftMs, b.ttftMs, c.ttftMs], true);
+  const tps  = bestClass([a.tps, b.tps, c.tps], false);
   return `
   <tr>
     <td><a href="${r.report}">${r.id}</a></td>
     <td>${r.host}<br><small>${r.os} · ${r.browser} · ext ${r.extension}</small></td>
-    <td class="num ${pa}">${fmtPct(a.passRate)}</td>
-    <td class="num ${pb}">${fmtPct(b.passRate)}</td>
-    <td class="num ${ta}">${fmt(a.ttftMs)}</td>
-    <td class="num ${tb}">${fmt(b.ttftMs)}</td>
-    <td class="num ${sa}">${a.tps.toFixed(1)}</td>
-    <td class="num ${sb}">${b.tps.toFixed(1)}</td>
+    <td class="num ${pass[0]}">${fmtPct(a.passRate)}</td>
+    <td class="num ${pass[1]}">${fmtPct(b.passRate)}</td>
+    <td class="num ${pass[2]}">${fmtPct(c.passRate)}</td>
+    <td class="num ${ttft[0]}">${fmt(a.ttftMs)}</td>
+    <td class="num ${ttft[1]}">${fmt(b.ttftMs)}</td>
+    <td class="num ${ttft[2]}">${fmt(c.ttftMs)}</td>
+    <td class="num ${tps[0]}">${fmt1(a.tps)}</td>
+    <td class="num ${tps[1]}">${fmt1(b.tps)}</td>
+    <td class="num ${tps[2]}">${fmt1(c.tps)}</td>
   </tr>`;
 }
 
@@ -79,14 +94,14 @@ fetch('manifest.json').then(r => r.json()).then(({ runs }) => {
         <tr>
           <th rowspan="2">Run</th>
           <th rowspan="2">Device</th>
-          <th colspan="2">Pass-rate</th>
-          <th colspan="2">TTFT (ms)</th>
-          <th colspan="2">TPS</th>
+          <th colspan="3">Pass-rate</th>
+          <th colspan="3">TTFT (ms)</th>
+          <th colspan="3">TPS</th>
         </tr>
         <tr>
-          <th>Gemma</th><th>Phi-4</th>
-          <th>Gemma</th><th>Phi-4</th>
-          <th>Gemma</th><th>Phi-4</th>
+          <th>A Gemma</th><th>B Edge/Phi-4</th><th>C Phi-4 tjs</th>
+          <th>A Gemma</th><th>B Edge/Phi-4</th><th>C Phi-4 tjs</th>
+          <th>A Gemma</th><th>B Edge/Phi-4</th><th>C Phi-4 tjs</th>
         </tr>
       </thead>
       <tbody>${runs.map(row).join('')}</tbody>
