@@ -11,6 +11,7 @@
 | Host | MacBook Air, Apple M3, 8 cores (4P+4E), 24 GB unified memory |
 | OS | macOS 26.4.1 |
 | Browser | Microsoft Edge Stable **147.0.3912.86** |
+| Extension | `gemma4-transformers.js-assistant` v0.2.1 |
 | Eval harness | `eval/runner.html` served by Vite 5.4 on `127.0.0.1:5180` |
 | Runs per case | 3 |
 | Total cases | 26 (14 tool-calling, 5 grounding, 4 refusal, 3 multi-turn) |
@@ -20,7 +21,7 @@
 
 | | A — `gemma-tjs` | B — `edge-prompt` |
 |---|---|---|
-| Model | `onnx-community/gemma-4-E2B-it-ONNX` | Phi-4-mini-instruct (Edge built-in) |
+| Model | `onnx-community/gemma-4-E2B-it-ONNX` (HF main, int4 ONNX) | Phi-4-mini-instruct (Edge AI service `2025.10.23.1`) |
 | Parameters | ~2 B (E2B = "Effective 2B" MoE) | ~3.8 B |
 | On-disk size | **~3.0 GB** (sharded ONNX in browser CacheStorage: 1.5 GB + 1.4 GB + 86 MB) | **~2.3 GB** (`model.onnx.data` 2.3 GB + tokenizer/config ~45 MB) |
 | Runtime | `@huggingface/transformers` 4.2.0 + WebGPU | Edge `LanguageModel` Prompt API (native, on-device) |

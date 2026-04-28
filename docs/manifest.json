@@ -1,0 +1,25 @@
+{
+  "runs": [
+    {
+      "id": "20260428-macos",
+      "date": "2026-04-28",
+      "os": "macOS 26.4.1",
+      "host": "MacBook Air, Apple M3, 8 cores, 24 GB",
+      "browser": "Edge Stable 147.0.3912.86",
+      "extension": "0.2.1",
+      "models": {
+        "gemma-tjs": "onnx-community/gemma-4-E2B-it-ONNX",
+        "edge-prompt": "Phi-4-mini (Edge AI 2025.10.23.1)"
+      },
+      "report": "../results/20260428-macos/report.md",
+      "json": {
+        "gemma-tjs": "../results/20260428-macos/gemma-tjs-2026-04-28T09-59-24-564Z.json",
+        "edge-prompt": "../results/20260428-macos/edge-prompt-2026-04-28T10-01-37-929Z.json"
+      },
+      "summary": {
+        "gemma-tjs": { "passRate": 0.885, "ttftMs": 621, "tps": 16.7 },
+        "edge-prompt": { "passRate": 0.808, "ttftMs": 144, "tps": 37.8 }
+      }
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>on-device-llm-bench</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 14px/1.5 -apple-system, system-ui, sans-serif; max-width: 980px; margin: 2rem auto; padding: 0 1rem; }
+  h1 { margin-bottom: 0.2rem; }
+  .sub { color: #888; margin-bottom: 2rem; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+  th, td { border: 1px solid #ccc3; padding: 6px 10px; text-align: left; }
+  th { background: #8881; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .winner { font-weight: 600; color: #2a8; }
+  details { margin: 1rem 0; padding: 0.5rem 1rem; border: 1px solid #ccc3; border-radius: 6px; }
+  summary { cursor: pointer; font-weight: 600; }
+  code { background: #8881; padding: 1px 4px; border-radius: 3px; }
+  .empty { color: #888; font-style: italic; }
+</style>
+</head>
+<body>
+<h1>on-device-llm-bench</h1>
+<p class="sub">Gemma 4 (Transformers.js + WebGPU) vs Phi-4-mini (Edge Prompt API) — same prompts, same harness, different runtimes.
+<a href="https://github.com/halton/on-device-llm-bench">Source on GitHub</a>.</p>
+
+<h2>Results</h2>
+<div id="root"><p class="empty">Loading…</p></div>
+
+<details>
+<summary>How to read this</summary>
+<ul>
+  <li><b>Pass-rate</b> — % of cases where the model produced an acceptable answer (exact tool match, grounded answer, correct refusal, etc.).</li>
+  <li><b>TTFT</b> — time to first token, in milliseconds. Lower is more responsive.</li>
+  <li><b>TPS</b> — output tokens per second, steady-state. Higher means faster generation.</li>
+  <li><b>Winner</b> column is per-row only — overall tradeoff is in the linked report.</li>
+</ul>
+</details>
+
+<details>
+<summary>Contribute a run from your device</summary>
+<p>Run both backends per the <a href="https://github.com/halton/on-device-llm-bench#how-to-run">README</a>, then add a folder under <code>results/&lt;YYYYMMDD&gt;-&lt;os-arch&gt;/</code> with the two JSONs and a <code>report.md</code>. Append an entry to <code>docs/manifest.json</code> and open a PR.</p>
+</details>
+
+<script>
+const fmtPct = v => (v * 100).toFixed(1) + '%';
+const fmt = v => Number.isFinite(v) ? v.toLocaleString() : '—';
+
+function row(r) {
+  const a = r.summary['gemma-tjs'], b = r.summary['edge-prompt'];
+  const w = (x, y, lower) => {
+    if (x === y) return ['', ''];
+    const aWins = lower ? x < y : x > y;
+    return [aWins ? 'winner' : '', aWins ? '' : 'winner'];
+  };
+  const [pa, pb] = w(a.passRate, b.passRate, false);
+  const [ta, tb] = w(a.ttftMs, b.ttftMs, true);
+  const [sa, sb] = w(a.tps, b.tps, false);
+  return `
+  <tr>
+    <td><a href="${r.report}">${r.id}</a></td>
+    <td>${r.host}<br><small>${r.os} · ${r.browser} · ext ${r.extension}</small></td>
+    <td class="num ${pa}">${fmtPct(a.passRate)}</td>
+    <td class="num ${pb}">${fmtPct(b.passRate)}</td>
+    <td class="num ${ta}">${fmt(a.ttftMs)}</td>
+    <td class="num ${tb}">${fmt(b.ttftMs)}</td>
+    <td class="num ${sa}">${a.tps.toFixed(1)}</td>
+    <td class="num ${sb}">${b.tps.toFixed(1)}</td>
+  </tr>`;
+}
+
+fetch('manifest.json').then(r => r.json()).then(({ runs }) => {
+  const root = document.getElementById('root');
+  if (!runs.length) { root.innerHTML = '<p class="empty">No runs yet.</p>'; return; }
+  root.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th rowspan="2">Run</th>
+          <th rowspan="2">Device</th>
+          <th colspan="2">Pass-rate</th>
+          <th colspan="2">TTFT (ms)</th>
+          <th colspan="2">TPS</th>
+        </tr>
+        <tr>
+          <th>Gemma</th><th>Phi-4</th>
+          <th>Gemma</th><th>Phi-4</th>
+          <th>Gemma</th><th>Phi-4</th>
+        </tr>
+      </thead>
+      <tbody>${runs.map(row).join('')}</tbody>
+    </table>`;
+}).catch(e => {
+  document.getElementById('root').innerHTML = `<p class="empty">Failed to load manifest: ${e}</p>`;
+});
+</script>
+</body>
+</html>

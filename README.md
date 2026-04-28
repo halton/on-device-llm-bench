@@ -1,7 +1,37 @@
-# Eval: Gemma 4 (Transformers.js) vs Edge + Phi-4-mini
+# on-device-llm-bench
 
-Apples-to-apples comparison of two on-device LLM backends behind the same agent
-interface used by this extension.
+An open, reproducible benchmark for **on-device LLMs running in the browser**.
+Currently compares two backends behind the same agent interface:
+
+- **Gemma 4 E2B** via Transformers.js + WebGPU (open-source runtime)
+- **Phi-4-mini** via Microsoft Edge's built-in `LanguageModel` Prompt API (closed runtime)
+
+📊 **Live results dashboard:** https://halton.github.io/on-device-llm-bench/
+
+## Why
+
+On-device LLMs are arriving through two very different stacks: **portable
+(Transformers.js + WebGPU)** and **browser-native (Prompt API)**. They have
+different tradeoffs for accuracy, latency, memory, and developer ergonomics.
+This repo runs the *same* prompts against both and publishes the numbers.
+
+Results are device-dependent. We welcome contributed runs from other hardware
+(see [Contributing results](#contributing-results)).
+
+## Prerequisites
+
+- **Microsoft Edge Stable ≥ 138** (tested on 147.0.3912.86)
+- **Node.js ≥ 20**
+- **Apple Silicon / x86-64 with WebGPU support** (Edge has WebGPU on by default)
+- For the Phi-4 backend:
+  - Enable `edge://flags/#prompt-api-for-phi-mini` → **Enabled**, restart Edge
+  - Visit `edge://on-device-internals` and verify performance class ≥ **High**
+  - Open https://microsoftedge.github.io/Demos/built-in-ai/playgrounds/prompt-api/
+    once to trigger the model download (~2.3 GB)
+- For the Gemma backend: ~3 GB free disk for the ONNX shards (cached in browser
+  CacheStorage on first load)
+- Quit any running Edge windows before using the Playwright runner — Edge holds
+  an exclusive lock on its profile directory.
 
 ## What gets compared
 
@@ -106,3 +136,39 @@ Append to the relevant `cases/*.json`. Schema:
 - Transformers.js with WebGPU needs a browser GPU adapter.
 - Running both in the same page guarantees the same hardware/thermal state and
   removes Node↔browser variance.
+
+## Contributing results
+
+The dashboard at the top of this README is fed by `results/<YYYYMMDD>-<os>/`
+folders in this repo. To add a run from your machine:
+
+1. Run both backends per **How to run** above; download the two JSON files.
+2. Score them: `npm run score -- results/gemma-tjs-*.json results/edge-prompt-*.json --out report.md`
+3. Create `results/<YYYYMMDD>-<os-arch>/` (e.g. `20260501-windows-x64`,
+   `20260501-linux-x64`) and move the two JSONs + `report.md` into it.
+4. Top of `report.md` must include: host, OS, Edge version, extension version,
+   model versions (see existing reports for format).
+5. Update `docs/manifest.json` with an entry for your folder.
+6. Open a PR.
+
+## Automated runner (Playwright) — ⚠️ not working, follow-up needed
+
+`run-auto.mjs` was an attempt to automate both backends end-to-end via
+Playwright with the `msedge` channel. **Status: does not currently work.**
+
+- ✅ Gemma side launches and completes, but the Playwright-controlled Edge
+  context behaves differently enough from a normal user session that results
+  may not be representative.
+- ❌ Phi-4 backend fails: the Edge AI surface refuses to initialize
+  `LanguageModel.create()` under Playwright's automation posture (page crashes
+  during model session creation).
+
+**For now, run the eval manually** following the steps in **How to run**. The
+script is checked in only as a starting point.
+
+**Follow-up ideas (PRs welcome):**
+- CDP-attach to a manually-launched Edge instead of letting Playwright launch it
+- Investigate which `--enable-automation` / blink-features signals the Edge AI
+  service uses to gate initialization
+- Build a lightweight Edge extension that drives the runner page from inside a
+  normal browser session
