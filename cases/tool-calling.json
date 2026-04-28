@@ -1,0 +1,86 @@
+[
+  {
+    "id": "tc-01-list-tabs",
+    "category": "tool-calling",
+    "input": "What tabs do I have open?",
+    "expected": { "tool": "get_open_tabs", "args": {} }
+  },
+  {
+    "id": "tc-02-list-tabs-alt",
+    "category": "tool-calling",
+    "input": "Show me my open tabs.",
+    "expected": { "tool": "get_open_tabs", "args": {} }
+  },
+  {
+    "id": "tc-03-go-to-tab",
+    "category": "tool-calling",
+    "input": "Switch to tab 5.",
+    "expected": { "tool": "go_to_tab", "args": { "tabId": 5 } }
+  },
+  {
+    "id": "tc-04-open-url",
+    "category": "tool-calling",
+    "input": "Open https://example.com",
+    "expected": { "tool": "open_url", "args": { "url": "https://example.com" } }
+  },
+  {
+    "id": "tc-05-open-url-background",
+    "category": "tool-calling",
+    "input": "Open https://news.ycombinator.com in the background.",
+    "expected": { "tool": "open_url", "args": { "url": "https://news.ycombinator.com", "background": true } }
+  },
+  {
+    "id": "tc-06-close-tab",
+    "category": "tool-calling",
+    "input": "Close tab 12.",
+    "expected": { "tool": "close_tab", "args": { "tabId": 12 } }
+  },
+  {
+    "id": "tc-07-ask-website",
+    "category": "tool-calling",
+    "input": "Find the pricing on this page.",
+    "expected": { "tool": "ask_website", "args": { "query": "pricing" } }
+  },
+  {
+    "id": "tc-08-ask-website-alt",
+    "category": "tool-calling",
+    "input": "What does this page say about refunds?",
+    "expected": { "tool": "ask_website", "args": { "query": "refunds" } }
+  },
+  {
+    "id": "tc-09-highlight",
+    "category": "tool-calling",
+    "input": "Highlight the section about installation.",
+    "expected": { "tool": "highlight_website_element", "args": { "query": "installation" } }
+  },
+  {
+    "id": "tc-10-find-history-default",
+    "category": "tool-calling",
+    "input": "Find the article about WebGPU I read recently.",
+    "expected": { "tool": "find_history", "args": { "query": "WebGPU" } }
+  },
+  {
+    "id": "tc-11-find-history-window",
+    "category": "tool-calling",
+    "input": "Search my history from the last 7 days for transformers.js.",
+    "expected": { "tool": "find_history", "args": { "query": "transformers.js", "sinceDays": 7 } }
+  },
+  {
+    "id": "tc-12-ambiguous-favors-history",
+    "category": "tool-calling",
+    "input": "I read something yesterday about Phi-4-mini, can you find it?",
+    "expected": { "tool": "find_history", "args": { "query": "Phi-4-mini" } }
+  },
+  {
+    "id": "tc-13-no-tool-greeting",
+    "category": "tool-calling",
+    "input": "Hi, how are you today?",
+    "expected": { "tool": "none", "args": {} }
+  },
+  {
+    "id": "tc-14-no-tool-meta",
+    "category": "tool-calling",
+    "input": "What can you do?",
+    "expected": { "tool": "none", "args": {} }
+  }
+]

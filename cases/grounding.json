@@ -1,0 +1,37 @@
+[
+  {
+    "id": "gr-01-cite-from-context",
+    "category": "grounding",
+    "input": "Based only on the page text, what is the refund window?",
+    "context": { "page": "Refunds are available within 30 days of purchase. After 30 days, no refunds will be issued." },
+    "expected": { "mustContain": ["30"], "mustNotContain": ["60", "90"] }
+  },
+  {
+    "id": "gr-02-no-info",
+    "category": "grounding",
+    "input": "What is the company's CEO name based on this page?",
+    "context": { "page": "Acme Inc. makes widgets. We were founded in 2010 and ship worldwide." },
+    "expected": { "mustContain": ["not", "page"], "mustNotContain": ["John", "Jane"] }
+  },
+  {
+    "id": "gr-03-numeric",
+    "category": "grounding",
+    "input": "How many products are listed?",
+    "context": { "page": "Our catalog: Widget A, Widget B, Widget C." },
+    "expected": { "mustContain": ["3", "three"] }
+  },
+  {
+    "id": "gr-04-quote",
+    "category": "grounding",
+    "input": "Quote the warranty length verbatim from the page.",
+    "context": { "page": "All products come with a 2-year limited warranty against manufacturing defects." },
+    "expected": { "mustContain": ["2-year", "2 year"] }
+  },
+  {
+    "id": "gr-05-faithful-no-extrapolation",
+    "category": "grounding",
+    "input": "Does the page mention international shipping?",
+    "context": { "page": "We ship to all 50 US states via UPS Ground." },
+    "expected": { "mustContain": ["no", "not"], "mustNotContain": ["yes", "international"] }
+  }
+]

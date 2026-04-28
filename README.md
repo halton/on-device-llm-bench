@@ -37,21 +37,24 @@ runner does not know which one it's calling.
 The runner is a browser page (`runner.html`). Both backends require browser
 context — Gemma needs WebGPU, Phi-4 needs the Edge `LanguageModel` global.
 
-### 1. Build the eval bundle
+This directory is its own self-contained project with its own `package.json`.
+
+### 1. Install + serve
 
 ```bash
-pnpm install
-pnpm exec vite build --config eval/vite.eval.config.ts
+cd eval
+npm install
+npm run serve   # vite dev server on http://127.0.0.1:5180/runner.html
 ```
-
-This emits `eval/dist/runner.html` plus assets.
 
 ### 2. Run against Gemma (any Chromium with WebGPU)
 
-```bash
-pnpm exec vite preview --config eval/vite.eval.config.ts
-# open the printed URL, select backend = gemma-tjs, click Run
-```
+1. Open the served URL in Chrome/Edge with WebGPU enabled.
+2. Select backend = **Gemma 4 / Transformers.js / WebGPU**.
+3. Set "Runs per case" (default 3 — increase for tighter latency stats).
+4. Click **Load model** → wait for "ready".
+5. Click **Run eval** → watch the live log and aggregate table.
+6. Click **Download results JSON** when complete; save into `results/`.
 
 ### 3. Run against Edge + Phi-4
 
@@ -60,18 +63,21 @@ pnpm exec vite preview --config eval/vite.eval.config.ts
 3. Visit `edge://on-device-internals` — confirm performance class ≥ High.
 4. Open the playground once to trigger model download:
    `https://microsoftedge.github.io/Demos/built-in-ai/playgrounds/prompt-api/`
-5. Open the runner URL in the same Edge profile, select backend =
-   `edge-prompt`, click Run.
+5. Open the served runner URL in the same Edge profile, select backend =
+   **Phi-4-mini / Edge Prompt API**, repeat steps 3–6 above.
 
 ### 4. Compare results
 
-Each run writes `eval/results/{backend}-{timestamp}.json`. Then:
+Each download is `{backend}-{timestamp}.json` containing per-run metrics plus
+per-case aggregates (pass-rate over N, mean / p50 / p95 of TTFT and TPS). To
+generate a side-by-side Markdown report:
 
 ```bash
-node eval/score.mjs eval/results/gemma-tjs-*.json eval/results/edge-prompt-*.json
+npm run score -- results/gemma-tjs-*.json results/edge-prompt-*.json --out results/report.md
 ```
 
-Produces a Markdown comparison table on stdout.
+The report includes overall accuracy, accuracy by category, latency &
+throughput with winners marked, and a per-case detail table.
 
 ## Adding a case
 

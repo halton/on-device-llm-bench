@@ -1,0 +1,32 @@
+[
+  {
+    "id": "mt-01-tab-then-close",
+    "category": "multi-turn",
+    "input": [
+      { "role": "user", "content": "List my open tabs." },
+      { "role": "assistant", "content": "{\"tool\":\"get_open_tabs\",\"args\":{}}" },
+      { "role": "user", "content": "Close the third one. Its tabId is 47." }
+    ],
+    "expected": { "tool": "close_tab", "args": { "tabId": 47 } }
+  },
+  {
+    "id": "mt-02-search-then-open",
+    "category": "multi-turn",
+    "input": [
+      { "role": "user", "content": "Find that article about WebGPU I read last week." },
+      { "role": "assistant", "content": "{\"tool\":\"find_history\",\"args\":{\"query\":\"WebGPU\",\"sinceDays\":7}}" },
+      { "role": "user", "content": "Open the first result: https://webgpu.example.com/article" }
+    ],
+    "expected": { "tool": "open_url", "args": { "url": "https://webgpu.example.com/article" } }
+  },
+  {
+    "id": "mt-03-clarify-then-tool",
+    "category": "multi-turn",
+    "input": [
+      { "role": "user", "content": "Highlight that thing." },
+      { "role": "assistant", "content": "What would you like me to highlight on the page?" },
+      { "role": "user", "content": "The pricing table." }
+    ],
+    "expected": { "tool": "highlight_website_element", "args": { "query": "pricing table" } }
+  }
+]
