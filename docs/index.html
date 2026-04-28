@@ -23,10 +23,10 @@
 <body>
 <h1>on-device-llm-bench</h1>
 <p class="sub">Three backends, same prompts, same harness:
-<b>A</b> Gemma 4 (Transformers.js + WebGPU) ·
-<b>B</b> Phi-4-mini (Edge Prompt API, native) ·
-<b>C</b> Phi-4-mini (Transformers.js + WebGPU).
-B vs C isolates the runtime; A vs C isolates the model.
+<code>gemma-tjs</code> (Gemma 4, Transformers.js + WebGPU) ·
+<code>phi4-edge</code> (Phi-4-mini, Edge Prompt API, native) ·
+<code>phi4-tjs</code> (Phi-4-mini, Transformers.js + WebGPU).
+<code>phi4-edge</code> vs <code>phi4-tjs</code> isolates the runtime; <code>gemma-tjs</code> vs <code>phi4-tjs</code> isolates the model.
 <a href="https://github.com/halton/on-device-llm-bench">Source on GitHub</a>.</p>
 
 <h2>Results</h2>
@@ -35,10 +35,10 @@ B vs C isolates the runtime; A vs C isolates the model.
 <details>
 <summary>How to read this</summary>
 <ul>
-  <li><b>A / B / C</b> — A: <code>gemma-tjs</code>, B: <code>edge-prompt</code>, C: <code>phi4-tjs</code>.</li>
+  <li><b>Backends</b> — <code>gemma-tjs</code>: Gemma 4 E2B on Transformers.js. <code>phi4-edge</code>: Phi-4-mini on Edge's native Prompt API. <code>phi4-tjs</code>: Phi-4-mini on Transformers.js.</li>
   <li><b>Pass-rate</b> — % of cases where the model produced an acceptable answer (exact tool match, grounded answer, correct refusal, etc.).</li>
   <li><b>TTFT</b> — time to first token, in milliseconds. Lower is more responsive.</li>
-  <li><b>TPS</b> — output tokens per second, steady-state. Higher means faster generation. C uses exact tokenization; B approximates ~4 chars/token.</li>
+  <li><b>TPS</b> — output tokens per second, steady-state. Higher means faster generation. <code>phi4-tjs</code> uses exact tokenization; <code>phi4-edge</code> approximates ~4 chars/token.</li>
   <li><b>Winner</b> highlight is per-row only — overall tradeoff is in the linked report.</li>
 </ul>
 </details>
@@ -64,7 +64,7 @@ function bestClass(values, lower) {
 
 function row(r) {
   const a = r.summary['gemma-tjs'] || {};
-  const b = r.summary['edge-prompt'] || {};
+  const b = r.summary['phi4-edge'] || {};
   const c = r.summary['phi4-tjs'] || {};
   const pass = bestClass([a.passRate, b.passRate, c.passRate], false);
   const ttft = bestClass([a.ttftMs, b.ttftMs, c.ttftMs], true);
@@ -99,15 +99,9 @@ fetch('manifest.json').then(r => r.json()).then(({ runs }) => {
           <th colspan="3">TPS</th>
         </tr>
         <tr>
-          <th>A<br><small>gemma-tjs</small></th>
-          <th>B<br><small>edge-prompt</small></th>
-          <th>C<br><small>phi4-tjs</small></th>
-          <th>A<br><small>gemma-tjs</small></th>
-          <th>B<br><small>edge-prompt</small></th>
-          <th>C<br><small>phi4-tjs</small></th>
-          <th>A<br><small>gemma-tjs</small></th>
-          <th>B<br><small>edge-prompt</small></th>
-          <th>C<br><small>phi4-tjs</small></th>
+          <th>gemma-tjs</th><th>phi4-edge</th><th>phi4-tjs</th>
+          <th>gemma-tjs</th><th>phi4-edge</th><th>phi4-tjs</th>
+          <th>gemma-tjs</th><th>phi4-edge</th><th>phi4-tjs</th>
         </tr>
       </thead>
       <tbody>${runs.map(row).join('')}</tbody>
