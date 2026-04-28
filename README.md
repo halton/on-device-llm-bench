@@ -47,9 +47,9 @@ npm install
 npm run serve   # vite dev server on http://127.0.0.1:5180/runner.html
 ```
 
-### 2. Run against Gemma (any Chromium with WebGPU)
+### 2. Run against Gemma (Edge Stable with WebGPU)
 
-1. Open the served URL in Chrome/Edge with WebGPU enabled.
+1. Open the served URL in Edge Stable (WebGPU is on by default).
 2. Select backend = **Gemma 4 / Transformers.js / WebGPU**.
 3. Set "Runs per case" (default 3 — increase for tighter latency stats).
 4. Click **Load model** → wait for "ready".
@@ -58,7 +58,7 @@ npm run serve   # vite dev server on http://127.0.0.1:5180/runner.html
 
 ### 3. Run against Edge + Phi-4
 
-1. Install Edge Canary/Dev (≥ 138.0.3309.2).
+1. Use Edge Stable (≥ 138).
 2. Enable `edge://flags/#prompt-api-for-phi-mini` → **Enabled**, restart.
 3. Visit `edge://on-device-internals` — confirm performance class ≥ High.
 4. Open the playground once to trigger model download:
