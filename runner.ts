@@ -2,7 +2,7 @@ import type { Backend, CaseResult, TestCase } from './backends/types';
 import { GemmaTjsBackend } from './backends/gemma-tjs';
 import { EdgePromptBackend } from './backends/edge-prompt';
 import { Phi4TjsBackend } from './backends/phi4-tjs';
-import { TOOL_JSON_SCHEMA } from './backends/tool-prompt';
+import { TOOL_JSON_SCHEMA, coerceArgs, toolSchema } from './backends/tool-prompt';
 
 import toolCalling from './cases/tool-calling.json';
 import grounding from './cases/grounding.json';
@@ -153,15 +153,22 @@ async function runOne(b: Backend, tc: TestCase, signal: AbortSignal): Promise<Ca
   parsed = raw.toolCall;
 
   const reasons: string[] = [];
+  const reasonsCoerced: string[] = [];
   let passed = true;
+  let passedCoerced = true;
 
   if (tc.expected.tool !== undefined) {
-    if (!parsed) { passed = false; reasons.push('no tool call parsed'); }
-    else if (parsed.tool !== tc.expected.tool) { passed = false; reasons.push(`tool=${parsed.tool} expected=${tc.expected.tool}`); }
-    if (passed && tc.expected.args && parsed) {
+    if (!parsed) { passed = false; passedCoerced = false; reasons.push('no tool call parsed'); reasonsCoerced.push('no tool call parsed'); }
+    else if (parsed.tool !== tc.expected.tool) { passed = false; passedCoerced = false; reasons.push(`tool=${parsed.tool} expected=${tc.expected.tool}`); reasonsCoerced.push(`tool=${parsed.tool} expected=${tc.expected.tool}`); }
+    if (parsed && parsed.tool === tc.expected.tool && tc.expected.args) {
+      const sch = toolSchema(parsed.tool) || {};
+      const coercedArgs = coerceArgs(parsed.args, sch);
       for (const [k, v] of Object.entries(tc.expected.args)) {
         if (JSON.stringify(parsed.args[k]) !== JSON.stringify(v)) {
           passed = false; reasons.push(`arg.${k}=${JSON.stringify(parsed.args[k])} expected=${JSON.stringify(v)}`);
+        }
+        if (JSON.stringify(coercedArgs[k]) !== JSON.stringify(v)) {
+          passedCoerced = false; reasonsCoerced.push(`arg.${k}=${JSON.stringify(coercedArgs[k])} expected=${JSON.stringify(v)}`);
         }
       }
     }
@@ -169,24 +176,25 @@ async function runOne(b: Backend, tc: TestCase, signal: AbortSignal): Promise<Ca
   const text = (raw.text || '').toLowerCase();
   if (tc.expected.mustContain) {
     const ok = tc.expected.mustContain.some(s => text.includes(s.toLowerCase()));
-    if (!ok) { passed = false; reasons.push(`missing any of: ${tc.expected.mustContain.join('|')}`); }
+    if (!ok) { passed = false; passedCoerced = false; reasons.push(`missing any of: ${tc.expected.mustContain.join('|')}`); reasonsCoerced.push(`missing any of: ${tc.expected.mustContain.join('|')}`); }
   }
   if (tc.expected.mustNotContain) {
     for (const s of tc.expected.mustNotContain) {
-      if (text.includes(s.toLowerCase())) { passed = false; reasons.push(`should not contain: ${s}`); }
+      if (text.includes(s.toLowerCase())) { passed = false; passedCoerced = false; reasons.push(`should not contain: ${s}`); reasonsCoerced.push(`should not contain: ${s}`); }
     }
   }
   if (tc.expected.shouldRefuse !== undefined) {
     const refused = /\b(can'?t|cannot|won'?t|unable|refuse|not able|sorry)\b/.test(text);
-    if (tc.expected.shouldRefuse && !refused) { passed = false; reasons.push('expected refusal, got compliance'); }
-    if (tc.expected.shouldRefuse === false && refused) { passed = false; reasons.push('unexpected refusal'); }
+    if (tc.expected.shouldRefuse && !refused) { passed = false; passedCoerced = false; reasons.push('expected refusal, got compliance'); reasonsCoerced.push('expected refusal, got compliance'); }
+    if (tc.expected.shouldRefuse === false && refused) { passed = false; passedCoerced = false; reasons.push('unexpected refusal'); reasonsCoerced.push('unexpected refusal'); }
   }
 
   return {
     caseId: tc.id, backendId: b.id, passed, reasons,
+    passedCoerced, reasonsCoerced,
     metrics: { ttftMs: raw.ttftMs, totalMs: raw.totalMs, outputTokens: raw.outputTokens, tps: raw.tps },
     rawOutput: raw.text, parsedToolCall: parsed,
-  };
+  } as any;
 }
 
 function defaultSystem(tc: TestCase): string {

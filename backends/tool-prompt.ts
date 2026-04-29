@@ -18,8 +18,15 @@ export const TOOL_SYSTEM_PROMPT = `You are a browser assistant. When a user requ
 Tools:
 ${TOOLS.map((t) => `- ${t.name}: ${t.desc} args=${JSON.stringify(t.args)}`).join('\n')}
 
-If the request needs no tool (pure conversation), respond with:
-{"tool": "none", "args": {}}
+Rules:
+- Argument types MUST match the schema exactly. \`tabId\` and \`sinceDays\` are numbers (e.g., 47, not "47"). \`background\` is a boolean.
+- For \`query\` arguments, extract the MINIMAL keyword or noun phrase from the user's request. Do NOT paraphrase or add context. Examples:
+  - User: "find the pricing on this page" → {"tool":"ask_website","args":{"query":"pricing"}}
+  - User: "highlight the pricing table" → {"tool":"highlight_website_element","args":{"query":"pricing table"}}
+  - User: "find that WebGPU article" → {"tool":"find_history","args":{"query":"WebGPU"}}
+- Disambiguation: use \`find_history\` for past/previous/earlier browsing ("the article I read", "last week"). Use \`ask_website\` only for the CURRENT page ("on this page", "here").
+- In a multi-turn conversation, if the latest user message supplies the missing detail for a previously-clarified action, emit the tool call NOW. Do not ask another question.
+- If the request needs no tool (pure conversation, greetings, meta-questions about you), respond with: {"tool": "none", "args": {}}
 
 Never wrap the JSON in code fences. Never add commentary.`;
 
@@ -39,6 +46,27 @@ export const TOOL_JSON_SCHEMA = {
 export interface ParsedToolCall {
   tool: string;
   args: Record<string, unknown>;
+}
+
+// Optional post-parse coercion: turn string-numbers ("12") into numbers (12).
+// Used by the runner to compute a *separate* coerced pass-rate alongside raw.
+export function coerceArgs(args: Record<string, unknown>, schema: Record<string, string>): Record<string, unknown> {
+  const out = { ...args };
+  for (const [k, t] of Object.entries(schema)) {
+    const want = t.replace(/\?$/, '');
+    if (want === 'number' && typeof out[k] === 'string' && /^-?\d+(\.\d+)?$/.test(out[k] as string)) {
+      out[k] = Number(out[k]);
+    } else if (want === 'boolean' && typeof out[k] === 'string') {
+      const v = (out[k] as string).toLowerCase();
+      if (v === 'true' || v === 'false') out[k] = v === 'true';
+    }
+  }
+  return out;
+}
+
+export function toolSchema(name: string): Record<string, string> | null {
+  const t = TOOLS.find((x) => x.name === name);
+  return t ? (t.args as Record<string, string>) : null;
 }
 
 export function parseToolCall(raw: string): ParsedToolCall {
