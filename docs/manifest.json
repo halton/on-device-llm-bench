@@ -47,6 +47,30 @@
         "phi4-edge": { "passRate": 0.731, "ttftMs": 139, "tps": 37.6 },
         "phi4-tjs": { "passRate": 0.731, "ttftMs": 833, "tps": 54.6 }
       }
+    },
+    {
+      "id": "20260429-macos",
+      "date": "2026-04-29",
+      "os": "macOS 26.4.1",
+      "host": "MacBook Air, Apple M3, 8 cores, 24 GB",
+      "browser": "Edge Stable 147.0.3912.86",
+      "extension": "0.2.1",
+      "models": {
+        "gemma-tjs": "onnx-community/gemma-4-E2B-it-ONNX",
+        "phi4-edge": "Phi-4-mini (Edge AI 2025.10.23.1)",
+        "phi4-tjs": "onnx-community/Phi-4-mini-instruct-ONNX-web"
+      },
+      "report": "https://github.com/halton/on-device-llm-bench/blob/main/results/20260429-macos/report.md",
+      "json": {
+        "gemma-tjs": "https://github.com/halton/on-device-llm-bench/blob/main/results/20260429-macos/gemma-tjs-2026-04-29T01-25-31-127Z.json",
+        "phi4-edge": "https://github.com/halton/on-device-llm-bench/blob/main/results/20260429-macos/edge-prompt-2026-04-29T01-27-56-339Z.json",
+        "phi4-tjs": "https://github.com/halton/on-device-llm-bench/blob/main/results/20260429-macos/phi4-tjs-2026-04-29T01-21-21-291Z.json"
+      },
+      "summary": {
+        "gemma-tjs": { "passRate": 0.923, "ttftMs": 1145, "tps": 13.4 },
+        "phi4-edge": { "passRate": 0.846, "ttftMs": 159, "tps": 36.3 },
+        "phi4-tjs": { "passRate": 0.846, "ttftMs": 1697, "tps": 243.8 }
+      }
     }
   ]
 }

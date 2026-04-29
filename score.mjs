@@ -27,7 +27,11 @@ function summarize(r) {
     b.tps.push(run.metrics.tps);
     b.totals.push(run.metrics.totalMs);
   }
-  const overall = { n: runs.length, pass: runs.filter(r => r.passed).length };
+  const overall = {
+    n: runs.length,
+    pass: runs.filter(r => r.passed).length,
+    passCoerced: runs.filter(r => (r.passedCoerced ?? r.passed)).length,
+  };
   return { backendId: r.backendId, byCat, overall };
 }
 function caseCategory(id) {
@@ -54,9 +58,10 @@ md += `- **B:** \`${sb.backendId}\` — source: \`${path.basename(files[1])}\`\n
 md += `- Generated: ${new Date().toISOString()}\n\n`;
 
 md += `## Overall accuracy\n\n`;
-md += `| Backend | Runs | Pass | Pass-rate |\n|---|---:|---:|---:|\n`;
-md += `| ${sa.backendId} | ${sa.overall.n} | ${sa.overall.pass} | ${fmtPct(sa.overall.pass, sa.overall.n)} |\n`;
-md += `| ${sb.backendId} | ${sb.overall.n} | ${sb.overall.pass} | ${fmtPct(sb.overall.pass, sb.overall.n)} |\n\n`;
+md += `| Backend | Runs | Pass (raw) | Pass-rate (raw) | Pass (coerced) | Pass-rate (coerced) |\n|---|---:|---:|---:|---:|---:|\n`;
+md += `| ${sa.backendId} | ${sa.overall.n} | ${sa.overall.pass} | ${fmtPct(sa.overall.pass, sa.overall.n)} | ${sa.overall.passCoerced} | ${fmtPct(sa.overall.passCoerced, sa.overall.n)} |\n`;
+md += `| ${sb.backendId} | ${sb.overall.n} | ${sb.overall.pass} | ${fmtPct(sb.overall.pass, sb.overall.n)} | ${sb.overall.passCoerced} | ${fmtPct(sb.overall.passCoerced, sb.overall.n)} |\n\n`;
+md += `> "coerced" applies post-parse type coercion (e.g. \`"12"\` → \`12\`) before comparing against expected args. This is a methodology variant; raw is the unmodified model output.\n\n`;
 
 md += `## Accuracy by category\n\n`;
 md += `| Category | ${sa.backendId} | ${sb.backendId} | Winner |\n|---|---:|---:|:---:|\n`;
